@@ -1,0 +1,252 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="collaborative_arm">
+
+  <link name="world"/>
+
+  <link name="pedestal">
+    <visual>
+      <geometry><box size="0.4 0.4 0.5"/></geometry>
+      <material name="gray"><color rgba="0.5 0.5 0.5 1.0"/></material>
+    </visual>
+    <collision>
+      <geometry><box size="0.4 0.4 0.5"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="20.0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <joint name="world_to_pedestal" type="fixed">
+    <parent link="world"/>
+    <child link="pedestal"/>
+    <origin xyz="0 0 0.25" rpy="0 0 0"/>
+  </joint>
+
+  <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro" />
+
+  <xacro:ur_robot
+    name="my_ur5"
+    tf_prefix=""
+    parent="pedestal"
+    joint_limits_parameters_file="$(find ur_description)/config/ur5/joint_limits.yaml"
+    kinematics_parameters_file="$(find ur_description)/config/ur5/default_kinematics.yaml"
+    physical_parameters_file="$(find ur_description)/config/ur5/physical_parameters.yaml"
+    visual_parameters_file="$(find ur_description)/config/ur5/visual_parameters.yaml"
+    sim_gazebo="true">
+    <origin xyz="0 0 0.25" rpy="0 0 0" />
+  </xacro:ur_robot>
+
+  <gazebo>
+    <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+      <parameters>$(find my_collaborative_arm)/config/arm_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+  <link name="gripper_base">
+    <visual>
+      <geometry><box size="0.14 0.04 0.04"/></geometry>
+      <material name="gray"><color rgba="0.5 0.5 0.5 1"/></material>
+    </visual>
+    <collision>
+      <geometry><box size="0.14 0.04 0.04"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.2"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <joint name="flange_to_gripper" type="fixed">
+    <parent link="tool0"/>
+    <child link="gripper_base"/>
+    <origin xyz="0 0 0.02" rpy="0 0 0"/>
+  </joint>
+
+  <link name="left_finger">
+    <visual>
+      <origin xyz="0 0 0.025" rpy="0 0 0"/>
+      <geometry><box size="0.01 0.02 0.05"/></geometry>
+      <material name="black"><color rgba="0.1 0.1 0.1 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.025" rpy="0 0 0"/>
+      <geometry><box size="0.01 0.02 0.05"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+  
+  <gazebo reference="left_finger">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <joint name="gripper_to_left_finger" type="prismatic">
+    <parent link="gripper_base"/>
+    <child link="left_finger"/>
+    <origin xyz="-0.055 0 0.02" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="0.05" effort="100.0" velocity="0.5"/>
+  </joint>
+
+  <link name="right_finger">
+    <visual>
+      <origin xyz="0 0 0.025" rpy="0 0 0"/>
+      <geometry><box size="0.01 0.02 0.05"/></geometry>
+      <material name="black"><color rgba="0.1 0.1 0.1 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.025" rpy="0 0 0"/>
+      <geometry><box size="0.01 0.02 0.05"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+  
+  <gazebo reference="right_finger">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <joint name="gripper_to_right_finger" type="prismatic">
+    <parent link="gripper_base"/>
+    <child link="right_finger"/>
+    <origin xyz="0.055 0 0.02" rpy="0 0 0"/>
+    <axis xyz="-1 0 0"/>
+    <limit lower="0" upper="0.05" effort="100.0" velocity="0.5"/>
+  </joint>
+
+  <link name="camera_link_base">
+    <visual>
+      <geometry>
+        <box size="0.12 0.04 0.03"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0.2 0.2 0.8 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="gripper_to_camera" type="fixed">
+    <parent link="gripper_base"/>
+    <child link="camera_link_base"/>
+    <origin xyz="0 -0.04 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_left_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.008" length="0.005"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <gazebo reference="camera_left_link">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <joint name="left_lens_joint" type="fixed">
+    <parent link="camera_link_base"/>
+    <child link="camera_left_link"/>
+    <origin xyz="-0.035 -0.01 0.015" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_right_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.008" length="0.005"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <gazebo reference="camera_right_link">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <joint name="right_lens_joint" type="fixed">
+    <parent link="camera_link_base"/>
+    <child link="camera_right_link"/>
+    <origin xyz="0.035 -0.01 0.015" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_math_frame"/>
+
+  <joint name="camera_math_joint" type="fixed">
+    <parent link="camera_link_base"/>
+    <child link="camera_math_frame"/>
+    <origin xyz="-0.035 -0.01 0.015" rpy="0 -1.5708 1.5708"/>
+  </joint>
+
+  <gazebo reference="camera_link_base">
+    <sensor type="multicamera" name="stereo_camera">
+      <update_rate>30.0</update_rate>
+      <camera name="left">
+        <pose>-0.035 -0.01 0.015 0 -1.5708 1.5708</pose>
+        <horizontal_fov>1.396</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip><near>0.02</near><far>300</far></clip>
+      </camera>
+      <camera name="right">
+        <pose>0.035 -0.01 0.015 0 -1.5708 1.5708</pose>
+        <horizontal_fov>1.396</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip><near>0.02</near><far>300</far></clip>
+      </camera>
+      <plugin name="stereo_camera_controller" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>custom_stereo</namespace>
+        </ros>
+        <camera_name>stereo</camera_name>
+        <frame_name>camera_math_frame</frame_name>
+        <hack_baseline>0.07</hack_baseline>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <ros2_control name="GripperHardware" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    <joint name="gripper_to_left_finger">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="gripper_to_right_finger">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+  <link name="tcp_link">
+    <inertial>
+      <mass value="0.001"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+  
+  <joint name="gripper_to_tcp" type="fixed">
+    <parent link="gripper_base"/>
+    <child link="tcp_link"/>
+    <origin xyz="0 0 0.045" rpy="0 0 0"/>
+  </joint>
+
+</robot>

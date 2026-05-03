@@ -1,0 +1,77 @@
+Collaborative Arm: Fruit Sorting Simulation
+
+This project is a complete ROS2 and Gazebo simulation of a robotic arm designed to detect and sort objects (red and green apples) using stereo vision and inverse kinematics.
+
+Media
+
+Demo Video: Watch on YouTube
+
+Features
+
+Custom URDF Integration: Combines a standard UR5 arm with a custom 2-DOF prismatic gripper and a custom stereo camera setup.
+
+Stereo Vision Processing: A Python node (vision_detector.py) uses OpenCV to detect red and green circular objects. It calculates the disparity between the left and right camera lenses to estimate depth and broadcasts the 3D coordinates using TF2.
+
+Inverse Kinematics Solver: A C++ node (ik_solver_node.cpp) uses the Orocos Kinematics and Dynamics Library (KDL) to compute joint angles from Cartesian coordinates (XYZ, RPY), allowing smooth end-effector positioning.
+
+Graphical User Interface: A custom Tkinter dashboard (cartesian_jogger.py) allows manual jogging of the arm, displays real-time transformation matrices, and executes automated hovering and picking sequences.
+
+Realistic Physics: Uses the Gazebo Link Attacher plugin to simulate the physical grasp between the gripper fingers and the apples.
+
+Tech Stack
+
+Middleware: ROS2 (ament_cmake)
+
+Languages: C++14, Python 3
+
+Simulation: Gazebo 11, RobotStatePublisher, ros2_control
+
+Computer Vision: OpenCV, cv_bridge
+
+Kinematics: Orocos KDL
+
+Project Structure
+
+/urdf: Contains the my_arm.urdf.xacro file assembling the robot.
+
+/worlds: Contains the Gazebo world with the sorting table and apples.
+
+/config: Controller configurations for the arm and gripper.
+
+/src: C++ source code for the IK Solver.
+
+/scripts: Python executable scripts for the GUI and Vision processing.
+
+/launch: Launch files to spawn the environment and controllers.
+
+How to Run
+
+Build the workspace:
+Navigate to your ROS2 workspace root and build the package:
+
+colcon build --packages-select my_collaborative_arm
+source install/setup.bash
+
+
+Launch the Simulation:
+This will open Gazebo, spawn the robot, and load the controllers.
+
+ros2 launch my_collaborative_arm spawn_arm.launch.py
+
+
+Run the Vision Detector:
+In a new terminal (remember to source the workspace):
+
+ros2 run my_collaborative_arm vision_detector.py
+
+
+Run the IK Solver:
+In a new terminal:
+
+ros2 run my_collaborative_arm ik_solver_node
+
+
+Open the Control GUI:
+In a new terminal:
+
+ros2 run my_collaborative_arm cartesian_jogger.py
